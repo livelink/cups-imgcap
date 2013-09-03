@@ -1,0 +1,26 @@
+#include <font.defs>
+#include <media.defs>
+
+Font *
+
+#media "4x6.Fullbleed/6x4" 4in 6in
+DriverType custom
+
+Manufacturer LiveLink
+Version 1.0
+
+Filter application/cnd.cups-raster 100 rawimg
+Filter image/jpeg 100 rawimg
+Filter image/png 100 rawimg
+Filter application/pdf 100 rawimg
+
+*MediaSize 4x6.Fullbleed
+
+{
+  ModelName "RAW-IMG Printer"
+  PCFileName "cups-img.ppd"
+  ColorDevice true
+  *ColorModel RGB/Color rgb chunky 0
+}
+
+

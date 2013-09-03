@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'tempfile'
+require 'fileutils'
+require 'json'
+
+module CupsBackend
+  class Job
+    attr_reader :job_id, :user, :title, :copies, :options, :source
+    def initialize(*argv)
+      @job_id, @user, @title, @copies, @options, @source = *argv
+    end
+
+    def read
+      if @source
+        File.open(@source, 'rb', &:read)
+      else
+        STDIN.read
+      end
+    end
+
+    def tmpInput
+      File.open("/tmp/rawimg-backend-#{$$}.tmp.#{@job_id}", 'wb') { |fp| fp << self.read }
+    end
+  end
+end
+
+
+if ARGV.size >= 5
+
+job = CupsBackend::Job.new(*ARGV)
+
+STDERR.puts "INFO: Printing page 1"
+
+input = job.tmpInput
+FileUtils.cp(input.path, "/tmp/raw-#{job.job_id}-data.bin")
+File.open("/tmp/raw-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
+
+exit 0
+else
+  puts %Q[direct #{File.basename $0}:/ "Virtual Image Printer" "RAW-IMG" "MFG:LiveLink;MDL:RAW-IMG Printer;DES:LiveLink RAW-IMG Printer;CLS:PRINTER"]
+end
+
+

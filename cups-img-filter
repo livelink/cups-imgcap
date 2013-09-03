@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'tempfile'
+require 'fileutils'
+require 'json'
+
+module CupsFilter
+  class Job
+    attr_reader :job_id, :user, :title, :copies, :options, :source
+    def initialize(*argv)
+      @job_id, @user, @title, @copies, @options, @source = *argv
+    end
+
+    def read
+      if @source
+        File.open(@source, 'rb', &:read)
+      else
+        STDIN.read
+      end
+    end
+
+    def tmpInput
+      File.open("/tmp/rawimg-backend-#{$$}.tmp.#{@job_id}", 'wb') { |fp| fp << self.read }
+    end
+  end
+end
+
+
+
+job = CupsFilter::Job.new(*ARGV)
+
+input = job.tmpInput
+FileUtils.cp(input.path, "/tmp/raw-b-#{job.job_id}-data.bin")
+File.open("/tmp/raw-b-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
+
+File.open(input.path,'rb') { |fp| STDOUT.write(fp.read) }
+
