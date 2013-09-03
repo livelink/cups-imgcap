@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+require 'rbconfig'
+STDERR.puts "DEBUG: ruby prefix: #{RbConfig::CONFIG['prefix']}"
+
 require 'rubygems'
 require 'tempfile'
 require 'fileutils'

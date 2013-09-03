@@ -1,10 +1,14 @@
 #!/usr/bin/env ruby
 
+require 'rbconfig'
+STDERR.puts "DEBUG: ruby prefix: #{RbConfig::CONFIG['prefix']}"
+
 require 'rubygems'
 require 'tempfile'
 require 'fileutils'
 require 'json'
 require 'etc'
+require 'dbus'
 
 module CupsBackend
   class Job
@@ -38,7 +42,10 @@ STDERR.puts "INFO: Printing page 1"
 STDERR.puts "PAGE: 1"
 
 input = job.tmpInput
-ext = case ENV['CONTENT_TYPE']
+
+type = ENV['CONTENT_TYPE']
+
+ext = case type
 when 'image/png'
   "png"
 when 'image/jpeg'
@@ -51,21 +58,29 @@ end
 
 nicename = "job-#{job.job_id}.#{ext}"
 
+class Notifier < DBus::Object
+  dbus_interface "net.livelinktechnology.ImageCapture" do
+    # Define a signal in the interface:
+    dbus_signal :GotFile, "type:s, path:s"
+  end
+end
+
+
+bus = DBus.system_bus
+
+notifier = Notifier.new('/net/livelinktechnology/ImageCapture')
+service = bus.request_service("net.livelinktechnology.ImageCapture")
+service.export(notifier)
+
 begin
-  #FileUtils.cp(input.path, "/tmp/raw-#{job.job_id}-data.bin")
-  FileUtils.cp(input.path, "/tmp/#{nicename}")
-  File.open(fn="/tmp/raw-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
+  FileUtils.cp(input.path, src="/tmp/#{nicename}")
+
+  File.open(fn="/tmp/raw-#{job.job_id}-info.json", 'w') do |fp|
+    fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV})
+  end
   File.chmod(0644, "/tmp/#{nicename}", input.path, fn)
 
-  #if File.exist?("/etc/imgcap.conf")
-
-  info = Etc.getpwnam(job.user)
-  FileUtils.mkdir_p(dir = (info.dir + "/ImageCapture"))
-  File.chown(info.uid, info.gid, dir)
-
-
-  FileUtils.cp(input.path, "#{dir}/#{nicename}")
-  File.chown(info.uid, info.gid, "#{dir}/#{nicename}")
+  notifier.GotFile(type, src)
 ensure
   File.unlink(input.path)
 end
