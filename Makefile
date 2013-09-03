@@ -8,8 +8,8 @@ cups-img.ppd.gz: cups-img.drv
 
 
 install: cups-img.ppd.gz
-	install -o root -g lp -m 755 cups-img-filter $(CUPS_FILTER_DIR)/rawimg
-	install -o root -g lp -m 755 cups-img-backend $(CUPS_BACKEND_DIR)/rawimg
+	install -o root -g lp -m 755 cups-img-filter $(CUPS_FILTER_DIR)/imgcap-raw
+	install -o root -g lp -m 755 cups-img-backend $(CUPS_BACKEND_DIR)/imgcap
 	mkdir -p $(CUPS_PPD_DIR)/livelink
 	cp cups-img.ppd.gz $(CUPS_PPD_DIR)/livelink
 

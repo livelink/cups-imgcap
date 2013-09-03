@@ -9,15 +9,14 @@ DriverType custom
 Manufacturer LiveLink
 Version 1.0
 
-Filter application/cnd.cups-raster 100 rawimg
-Filter image/jpeg 100 rawimg
-Filter image/png 100 rawimg
-Filter application/pdf 100 rawimg
+Filter image/jpeg 100 imgcap-raw
+Filter image/png 100 imgcap-raw
+Filter application/pdf 100 imgcap-raw
 
 *MediaSize 4x6.Fullbleed
 
 {
-  ModelName "RAW-IMG Printer"
+  ModelName "Image Capture"
   PCFileName "cups-img.ppd"
   ColorDevice true
   *ColorModel RGB/Color rgb chunky 0

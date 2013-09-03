@@ -26,13 +26,9 @@ module CupsFilter
   end
 end
 
-
+# passthru - let backend do the lifting
 
 job = CupsFilter::Job.new(*ARGV)
 
-input = job.tmpInput
-FileUtils.cp(input.path, "/tmp/raw-b-#{job.job_id}-data.bin")
-File.open("/tmp/raw-b-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
-
-File.open(input.path,'rb') { |fp| STDOUT.write(fp.read) }
+STDOUT.write(job.read)
 

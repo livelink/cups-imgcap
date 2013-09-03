@@ -4,6 +4,7 @@ require 'rubygems'
 require 'tempfile'
 require 'fileutils'
 require 'json'
+require 'etc'
 
 module CupsBackend
   class Job
@@ -31,15 +32,48 @@ if ARGV.size >= 5
 
 job = CupsBackend::Job.new(*ARGV)
 
+# ignore copies
+#
 STDERR.puts "INFO: Printing page 1"
+STDERR.puts "PAGE: 1"
 
 input = job.tmpInput
-FileUtils.cp(input.path, "/tmp/raw-#{job.job_id}-data.bin")
-File.open("/tmp/raw-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
+ext = case ENV['CONTENT_TYPE']
+when 'image/png'
+  "png"
+when 'image/jpeg'
+  "jpg"
+when 'application/pdf'
+  "pdf"
+else
+  "bin"
+end
+
+nicename = "job-#{job.job_id}.#{ext}"
+
+begin
+  #FileUtils.cp(input.path, "/tmp/raw-#{job.job_id}-data.bin")
+  FileUtils.cp(input.path, "/tmp/#{nicename}")
+  File.open(fn="/tmp/raw-#{job.job_id}-info.json", 'w') { |fp| fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV}) }
+  File.chmod(0644, "/tmp/#{nicename}", input.path, fn)
+
+  #if File.exist?("/etc/imgcap.conf")
+
+  info = Etc.getpwnam(job.user)
+  FileUtils.mkdir_p(dir = (info.dir + "/ImageCapture"))
+  File.chown(info.uid, info.gid, dir)
+
+
+  FileUtils.cp(input.path, "#{dir}/#{nicename}")
+  File.chown(info.uid, info.gid, "#{dir}/#{nicename}")
+ensure
+  File.unlink(input.path)
+end
 
 exit 0
+
 else
-  puts %Q[direct #{File.basename $0}:/ "Virtual Image Printer" "RAW-IMG" "MFG:LiveLink;MDL:RAW-IMG Printer;DES:LiveLink RAW-IMG Printer;CLS:PRINTER"]
+  puts %Q[direct #{File.basename $0}:/ "Image Capture" "Img-Cap" "MFG:LiveLink;MDL:Image Capture;DES:LiveLink Image Capture;CLS:PRINTER"]
 end
 
 
