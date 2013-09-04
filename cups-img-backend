@@ -15,6 +15,8 @@ module CupsBackend
     attr_reader :job_id, :user, :title, :copies, :options, :source
     def initialize(*argv)
       @job_id, @user, @title, @copies, @options, @source = *argv
+
+      @copies = (@copies || 1).to_i
     end
 
     def read
@@ -28,6 +30,30 @@ module CupsBackend
     def tmpInput
       File.open("/tmp/rawimg-backend-#{$$}.tmp.#{@job_id}", 'wb') { |fp| fp << self.read }
     end
+
+    def type
+      ENV['CONTENT_TYPE'] || 'application/octet-stream'
+    end
+
+    def ext
+      case type
+      when 'image/png'
+        "png"
+      when 'image/jpeg'
+        "jpg"
+      when 'application/pdf'
+        "pdf"
+      else
+        "bin"
+      end
+    end
+  end
+end
+
+class Notifier < DBus::Object
+  dbus_interface "net.livelinktechnology.ImageCapture" do
+    # Define a signal in the interface:
+    dbus_signal :GotFile, "type:s, path:s, copies:u"
   end
 end
 
@@ -41,30 +67,19 @@ job = CupsBackend::Job.new(*ARGV)
 STDERR.puts "INFO: Printing page 1"
 STDERR.puts "PAGE: 1"
 
-input = job.tmpInput
+nicename = "job-#{job.job_id}.#{job.ext}"
+outfile = "/tmp/#{nicename}"
+metafile = "/tmp/#{nicename}.json"
 
-type = ENV['CONTENT_TYPE']
-
-ext = case type
-when 'image/png'
-  "png"
-when 'image/jpeg'
-  "jpg"
-when 'application/pdf'
-  "pdf"
-else
-  "bin"
+File.open(outfile, 'wb') do |fp|
+  fp << job.read
 end
 
-nicename = "job-#{job.job_id}.#{ext}"
-
-class Notifier < DBus::Object
-  dbus_interface "net.livelinktechnology.ImageCapture" do
-    # Define a signal in the interface:
-    dbus_signal :GotFile, "type:s, path:s"
-  end
+File.open(metafile, 'w') do |fp|
+  fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV})
 end
 
+File.chmod(0644, "/tmp/#{nicename}", outfile, metafile)
 
 bus = DBus.system_bus
 
@@ -72,18 +87,7 @@ notifier = Notifier.new('/net/livelinktechnology/ImageCapture')
 service = bus.request_service("net.livelinktechnology.ImageCapture")
 service.export(notifier)
 
-begin
-  FileUtils.cp(input.path, src="/tmp/#{nicename}")
-
-  File.open(fn="/tmp/raw-#{job.job_id}-info.json", 'w') do |fp|
-    fp << JSON.pretty_unparse({'ENV' => ENV.to_hash, 'ARGV' => ARGV})
-  end
-  File.chmod(0644, "/tmp/#{nicename}", input.path, fn)
-
-  notifier.GotFile(type, src)
-ensure
-  File.unlink(input.path)
-end
+notifier.GotFile(job.type, outfile, job.copies)
 
 exit 0
 
