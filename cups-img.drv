@@ -28,12 +28,6 @@ MediaSize 8x12.Fullbleed
 MediaSize 10x12.Fullbleed
 #media "12x12.Fullbleed/12x12" 12in 12in
 MediaSize 12x12.Fullbleed
-#media "12x18.Fullbleed/12x18" 12in 18in
-MediaSize 12x18.Fullbleed
-#media "18x24.Fullbleed/18x24" 18in 24in
-MediaSize 18x24.Fullbleed
-#media "24x36.Fullbleed/24x36" 24in 36in
-MediaSize 24x36.Fullbleed
 #media "20x30.Fullbleed/20x30" 20in 30in
 MediaSize 20x30.Fullbleed
 
