@@ -3,7 +3,34 @@
 
 Font *
 
+// Configured print sizes below
+// * prefix for MediaSize marks default option
+
+#media "5x5.Fullbleed/5x5" 5in 5in
+MediaSize 5x5.Fullbleed
 #media "4x6.Fullbleed/6x4" 4in 6in
+*MediaSize 4x6.Fullbleed
+#media "6x6.Fullbleed/6x6" 6in 6in
+MediaSize 6x6.Fullbleed
+#media "5x7.Fullbleed/7x5" 5in 7in
+MediaSize 5x7.Fullbleed
+#media "6x8.Fullbleed/8x6" 6in 8in
+MediaSize 6x8.Fullbleed
+#media "8x8.Fullbleed/8x8" 8in 8in
+MediaSize 8x8.Fullbleed
+#media "8x10.Fullbleed/10x8" 8in 10in
+MediaSize 8x10.Fullbleed
+#media "10x10.Fullbleed/10x10" 10in 10in
+MediaSize 10x10.Fullbleed
+#media "8x12.Fullbleed/12x8" 8in 12in
+MediaSize 8x12.Fullbleed
+#media "10x12.Fullbleed/12x10" 10in 12in
+MediaSize 10x12.Fullbleed
+#media "12x12.Fullbleed/12x12" 12in 12in
+MediaSize 12x12.Fullbleed
+#media "20x30.Fullbleed/20x30" 20in 30in
+MediaSize 20x30.Fullbleed
+
 DriverType custom
 
 Manufacturer LiveLink
@@ -12,8 +39,6 @@ Version 1.0
 Filter image/jpeg 100 imgcap-raw
 Filter image/png 100 imgcap-raw
 Filter application/pdf 100 imgcap-raw
-
-*MediaSize 4x6.Fullbleed
 
 {
   ModelName "Image Capture"
